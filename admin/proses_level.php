@@ -1,58 +1,74 @@
 <?php
-include 'koneksi.php'; // Pastikan koneksi PDO digunakan
+include 'koneksi.php';
 
 try {
-    if ($_GET['proses'] == 'insert') {
+    $proses = isset($_GET['proses']) ? $_GET['proses'] : '';
+
+    if ($proses == 'insert') {
         // Validasi input
         if (empty($_POST['nama_level']) || empty($_POST['keterangan'])) {
-            throw new Exception("Nama level dan keterangan tidak boleh kosong.");
+            throw new Exception("Nama level dan keterangan harus diisi!");
         }
 
-        // Query insert
-        $query = $db->prepare("INSERT INTO level (nama_level, keterangan) VALUES (:nama_level, :keterangan)");
-        $query->bindParam(':nama_level', $_POST['nama_level']);
-        $query->bindParam(':keterangan', $_POST['keterangan']);
-        $query->execute();
+        // Insert data menggunakan prepared statement
+        $stmt = $db->prepare("INSERT INTO level (nama_level, keterangan) 
+                             VALUES (:nama_level, :keterangan)");
 
-        // Redirect
+        $stmt->bindParam(':nama_level', $_POST['nama_level']);
+        $stmt->bindParam(':keterangan', $_POST['keterangan']);
+
+        $stmt->execute();
+
         header("Location: index.php?p=level");
         exit();
-    } elseif ($_GET['proses'] == 'edit') {
+    } elseif ($proses == 'edit') {
         // Validasi input
-        if (empty($_POST['nama_level']) || empty($_POST['keterangan']) || empty($_POST['id'])) {
-            throw new Exception("Semua data harus diisi.");
+        if (empty($_POST['id']) || empty($_POST['nama_level']) || empty($_POST['keterangan'])) {
+            throw new Exception("Semua field harus diisi!");
         }
 
-        // Query update
-        $query = $db->prepare("UPDATE level SET nama_level = :nama_level, keterangan = :keterangan WHERE id = :id");
-        $query->bindParam(':nama_level', $_POST['nama_level']);
-        $query->bindParam(':keterangan', $_POST['keterangan']);
-        $query->bindParam(':id', $_POST['id'], PDO::PARAM_INT);
-        $query->execute();
+        // Update data menggunakan prepared statement
+        $stmt = $db->prepare("UPDATE level SET 
+                             nama_level = :nama_level,
+                             keterangan = :keterangan
+                             WHERE id = :id");
 
-        // Redirect
+        $stmt->bindParam(':id', $_POST['id']);
+        $stmt->bindParam(':nama_level', $_POST['nama_level']);
+        $stmt->bindParam(':keterangan', $_POST['keterangan']);
+
+        $stmt->execute();
+
         header("Location: index.php?p=level");
         exit();
-    } elseif ($_GET['proses'] == 'delete') {
-        // Validasi input ID
+    } elseif ($proses == 'delete') {
+        // Validasi input
         if (empty($_GET['id'])) {
-            throw new Exception("ID tidak valid.");
+            throw new Exception("ID tidak valid!");
         }
 
-        // Query delete
-        $query = $db->prepare("DELETE FROM level WHERE id = :id");
-        $query->bindParam(':id', $_GET['id'], PDO::PARAM_INT);
-        $query->execute();
+        // Periksa apakah level sedang digunakan di tabel user
+        $stmt = $db->prepare("SELECT COUNT(*) as count FROM user WHERE level_id = :id");
+        $stmt->bindParam(':id', $_GET['id']);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Redirect
+        if ($result['count'] > 0) {
+            throw new Exception("Level tidak dapat dihapus karena sedang digunakan!");
+        }
+
+        // Delete data menggunakan prepared statement
+        $stmt = $db->prepare("DELETE FROM level WHERE id = :id");
+        $stmt->bindParam(':id', $_GET['id']);
+        $stmt->execute();
+
         header("Location: index.php?p=level");
         exit();
     } else {
-        throw new Exception("Proses tidak valid.");
+        throw new Exception("Proses tidak valid!");
     }
 } catch (Exception $e) {
-    // Menampilkan pesan error (hindari menampilkan error sensitif ke user langsung)
-    echo "<p>Error: " . htmlspecialchars($e->getMessage()) . "</p>";
-    // Log error (opsional, untuk debugging)
-    // error_log($e->getMessage());
+    echo "<div class='alert alert-danger'>" . htmlspecialchars($e->getMessage()) . "</div>";
+    // Log error jika diperlukan
+    error_log($e->getMessage());
 }

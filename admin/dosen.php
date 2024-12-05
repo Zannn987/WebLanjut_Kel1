@@ -1,5 +1,5 @@
 <?php
-include 'koneksi_pdo.php'; // Koneksi ke database menggunakan PDO
+include 'koneksi.php'; // Koneksi ke database menggunakan PDO
 $aksi = isset($_GET['aksi']) ? $_GET['aksi'] : 'list';
 
 switch ($aksi) {

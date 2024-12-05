@@ -1,77 +1,85 @@
 <?php
-include 'koneksi.php'; // Pastikan koneksi menggunakan PDO
+include 'koneksi.php';
 
 try {
-    // Tangkap parameter proses dari URL
     $proses = isset($_GET['proses']) ? $_GET['proses'] : '';
 
     if ($proses == 'insert') {
         // Validasi input
         if (
-            empty($_POST['nik']) || empty($_POST['nama_dosen']) || empty($_POST['email']) ||
-            empty($_POST['prodi_id']) || empty($_POST['notelp']) || empty($_POST['alamat'])
+            empty($_POST['nip']) || empty($_POST['nama_dosen']) ||
+            empty($_POST['email']) || empty($_POST['prodi_id']) ||
+            empty($_POST['notelp']) || empty($_POST['alamat'])
         ) {
-            throw new Exception("Semua data harus diisi.");
+            throw new Exception("Semua field harus diisi!");
         }
 
-        // Query insert
-        $query = $db->prepare("INSERT INTO dosen (nip, nama_dosen, email, prodi_id, notelp, alamat) 
-                               VALUES (:nip, :nama_dosen, :email, :prodi_id, :notelp, :alamat)");
-        $query->bindParam(':nip', $_POST['nik']);
-        $query->bindParam(':nama_dosen', $_POST['nama_dosen']);
-        $query->bindParam(':email', $_POST['email']);
-        $query->bindParam(':prodi_id', $_POST['prodi_id']);
-        $query->bindParam(':notelp', $_POST['notelp']);
-        $query->bindParam(':alamat', $_POST['alamat']);
-        $query->execute();
+        // Insert data menggunakan prepared statement
+        $stmt = $db->prepare("INSERT INTO dosen (nip, nama_dosen, email, prodi_id, notelp, alamat) 
+                             VALUES (:nip, :nama_dosen, :email, :prodi_id, :notelp, :alamat)");
 
-        // Redirect setelah sukses
-        header('Location: index.php?p=dosen');
+        $stmt->bindParam(':nip', $_POST['nip']);
+        $stmt->bindParam(':nama_dosen', $_POST['nama_dosen']);
+        $stmt->bindParam(':email', $_POST['email']);
+        $stmt->bindParam(':prodi_id', $_POST['prodi_id']);
+        $stmt->bindParam(':notelp', $_POST['notelp']);
+        $stmt->bindParam(':alamat', $_POST['alamat']);
+
+        $stmt->execute();
+
+        header("Location: index.php?p=dosen");
         exit();
     } elseif ($proses == 'edit') {
         // Validasi input
         if (
-            empty($_POST['id']) || empty($_POST['nik']) || empty($_POST['nama_dosen']) ||
-            empty($_POST['email']) || empty($_POST['prodi_id']) || empty($_POST['notelp']) || empty($_POST['alamat'])
+            empty($_POST['id']) || empty($_POST['nip']) ||
+            empty($_POST['nama_dosen']) || empty($_POST['email']) ||
+            empty($_POST['prodi_id']) || empty($_POST['notelp']) ||
+            empty($_POST['alamat'])
         ) {
-            throw new Exception("Semua data harus diisi.");
+            throw new Exception("Semua field harus diisi!");
         }
 
-        // Query update
-        $query = $db->prepare("UPDATE dosen SET nip = :nip, nama_dosen = :nama_dosen, email = :email, 
-                               prodi_id = :prodi_id, notelp = :notelp, alamat = :alamat WHERE id = :id");
-        $query->bindParam(':id', $_POST['id'], PDO::PARAM_INT);
-        $query->bindParam(':nip', $_POST['nik']);
-        $query->bindParam(':nama_dosen', $_POST['nama_dosen']);
-        $query->bindParam(':email', $_POST['email']);
-        $query->bindParam(':prodi_id', $_POST['prodi_id']);
-        $query->bindParam(':notelp', $_POST['notelp']);
-        $query->bindParam(':alamat', $_POST['alamat']);
-        $query->execute();
+        // Update data menggunakan prepared statement
+        $stmt = $db->prepare("UPDATE dosen SET 
+                             nip = :nip,
+                             nama_dosen = :nama_dosen,
+                             email = :email,
+                             prodi_id = :prodi_id,
+                             notelp = :notelp,
+                             alamat = :alamat
+                             WHERE id = :id");
 
-        // Redirect setelah sukses
-        header('Location: index.php?p=dosen');
+        $stmt->bindParam(':id', $_POST['id']);
+        $stmt->bindParam(':nip', $_POST['nip']);
+        $stmt->bindParam(':nama_dosen', $_POST['nama_dosen']);
+        $stmt->bindParam(':email', $_POST['email']);
+        $stmt->bindParam(':prodi_id', $_POST['prodi_id']);
+        $stmt->bindParam(':notelp', $_POST['notelp']);
+        $stmt->bindParam(':alamat', $_POST['alamat']);
+
+        $stmt->execute();
+
+        header("Location: index.php?p=dosen");
         exit();
     } elseif ($proses == 'delete') {
         // Validasi input
         if (empty($_GET['id'])) {
-            throw new Exception("ID tidak valid.");
+            throw new Exception("ID tidak valid!");
         }
 
-        // Query delete
-        $query = $db->prepare("DELETE FROM dosen WHERE id = :id");
-        $query->bindParam(':id', $_GET['id'], PDO::PARAM_INT);
-        $query->execute();
+        // Delete data menggunakan prepared statement
+        $stmt = $db->prepare("DELETE FROM dosen WHERE id = :id");
+        $stmt->bindParam(':id', $_GET['id']);
+        $stmt->execute();
 
-        // Redirect setelah sukses
-        header('Location: index.php?p=dosen');
+        header("Location: index.php?p=dosen");
         exit();
     } else {
-        throw new Exception("Proses tidak valid.");
+        throw new Exception("Proses tidak valid!");
     }
 } catch (Exception $e) {
-    // Tampilkan pesan error yang aman untuk pengguna
-    echo "<p>Error: " . htmlspecialchars($e->getMessage()) . "</p>";
-    // Log error untuk debugging (opsional)
-    // error_log($e->getMessage());
+    echo "<div class='alert alert-danger'>" . htmlspecialchars($e->getMessage()) . "</div>";
+    // Log error jika diperlukan
+    error_log($e->getMessage());
 }

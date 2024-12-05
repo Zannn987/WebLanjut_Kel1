@@ -14,16 +14,10 @@
     </thead>
     <tbody>
         <?php
-        include 'admin/koneksi.php'; // Pastikan file koneksi menggunakan PDO
-
-        // Menyiapkan query untuk mengambil data dari matakuliah
-        $sql = $db->query("SELECT * FROM matakuliah");
-
-        // Inisialisasi variabel untuk nomor urut
+        include 'admin/koneksi.php';
+        $matakuliah = $db->query("SELECT * FROM matakuliah");
         $no = 1;
-
-        // Menampilkan data dengan PDO
-        while ($data_matakuliah = $sql->fetch(PDO::FETCH_ASSOC)) {
+        while ($data_matakuliah = $matakuliah->fetch(PDO::FETCH_ASSOC)) {
         ?>
             <tr>
                 <td><?= $no ?></td>

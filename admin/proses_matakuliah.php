@@ -1,58 +1,84 @@
 <?php
 include 'koneksi.php';
 
-if ($_GET['proses'] == 'insert') {
-    // Proses insert data mata kuliah
-    $sql = $db->prepare("INSERT INTO matakuliah (kode_matakuliah, nama_matakuliah, semester, jenis_matakuliah, sks, jam, keterangan) 
-                         VALUES (:kode_matakuliah, :nama_matakuliah, :semester, :jenis_matakuliah, :sks, :jam, :keterangan)");
-    $sql->bindParam(':kode_matakuliah', $_POST['kode_matakuliah']);
-    $sql->bindParam(':nama_matakuliah', $_POST['nama_matakuliah']);
-    $sql->bindParam(':semester', $_POST['semester']);
-    $sql->bindParam(':jenis_matakuliah', $_POST['jenis_matakuliah']);
-    $sql->bindParam(':sks', $_POST['sks']);
-    $sql->bindParam(':jam', $_POST['jam']);
-    $sql->bindParam(':keterangan', $_POST['keterangan']);
+try {
+    $proses = isset($_GET['proses']) ? $_GET['proses'] : '';
 
-    if ($sql->execute()) {
-        echo "<script>window.location='index.php?p=matakuliah'</script>";
+    if ($proses == 'insert') {
+        // Validasi input
+        if (
+            empty($_POST['kode_matakuliah']) || empty($_POST['nama_matakuliah']) ||
+            empty($_POST['sks']) || empty($_POST['semester']) ||
+            empty($_POST['jenis_mata_kuliah']) || empty($_POST['keterangan'])
+        ) {
+            var_dump($_POST); // Debugging
+            throw new Exception("Semua field harus diisi!");
+        }
+
+        // Insert data
+        $stmt = $db->prepare("INSERT INTO matakuliah (kode_matakuliah, nama_matakuliah, sks, semester, jenis_matakuliah, keterangan) 
+                             VALUES (:kode_matakuliah, :nama_matakuliah, :sks, :semester, :jenis_mata_kuliah, :keterangan)");
+
+        $stmt->bindParam(':kode_matakuliah', $_POST['kode_matakuliah']);
+        $stmt->bindParam(':nama_matakuliah', $_POST['nama_matakuliah']);
+        $stmt->bindParam(':sks', $_POST['sks']);
+        $stmt->bindParam(':semester', $_POST['semester']);
+        $stmt->bindParam(':jenis_mata_kuliah', $_POST['jenis_mata_kuliah']);
+        $stmt->bindParam(':keterangan', $_POST['keterangan']);
+
+        $stmt->execute();
+
+        header("Location: index.php?p=matakuliah");
+        exit();
+    } elseif ($proses == 'edit') {
+        // Validasi input
+        if (
+            empty($_POST['id']) || empty($_POST['kode_mk']) ||
+            empty($_POST['nama_matakuliah']) || empty($_POST['sks']) ||
+            empty($_POST['semester']) || empty($_POST['jenis_matakuliah']) || empty($_POST['keterangan'])
+        ) {
+            throw new Exception("Semua field harus diisi!");
+        }
+
+        // Update data
+        $stmt = $db->prepare("UPDATE matakuliah SET 
+                             kode_matakuliah = :kode_matakuliah,
+                             nama_matakuliah = :nama_matakuliah,
+                             sks = :sks,
+                             semester = :semester,
+                             jenis_matakuliah = :jenis_matakuliah,
+                             keterangan = :keterangan
+                             WHERE id = :id");
+
+        $stmt->bindParam(':id', $_POST['id']);
+        $stmt->bindParam(':kode_matakuliah', $_POST['kode_matakuliah']);
+        $stmt->bindParam(':nama_matakuliah', $_POST['nama_matakuliah']);
+        $stmt->bindParam(':sks', $_POST['sks']);
+        $stmt->bindParam(':semester', $_POST['semester']);
+        $stmt->bindParam(':jenis_matakuliah', $_POST['jenis_matakuliah']);
+        $stmt->bindParam(':keterangan', $_POST['keterangan']);
+
+        $stmt->execute();
+
+        header("Location: index.php?p=matakuliah");
+        exit();
+    } elseif ($proses == 'delete') {
+        // Validasi input
+        if (empty($_GET['id'])) {
+            throw new Exception("ID tidak valid!");
+        }
+
+        // Delete data
+        $stmt = $db->prepare("DELETE FROM matakuliah WHERE id = :id");
+        $stmt->bindParam(':id', $_GET['id']);
+        $stmt->execute();
+
+        header("Location: index.php?p=matakuliah");
+        exit();
     } else {
-        echo "Error: " . $sql->errorInfo()[2];
+        throw new Exception("Proses tidak valid!");
     }
-}
-
-if ($_GET['proses'] == 'edit') {
-    // Proses update data mata kuliah
-    $sql = $db->prepare("UPDATE matakuliah SET 
-                            nama_matakuliah = :nama_matakuliah,
-                            semester = :semester,
-                            jenis_matakuliah = :jenis_matakuliah,
-                            sks = :sks,
-                            jam = :jam,
-                            keterangan = :keterangan
-                         WHERE kode_matakuliah = :kode_matakuliah");
-    $sql->bindParam(':kode_matakuliah', $_POST['kode_matakuliah']);
-    $sql->bindParam(':nama_matakuliah', $_POST['nama_matakuliah']);
-    $sql->bindParam(':semester', $_POST['semester']);
-    $sql->bindParam(':jenis_matakuliah', $_POST['jenis_matakuliah']);
-    $sql->bindParam(':sks', $_POST['sks']);
-    $sql->bindParam(':jam', $_POST['jam']);
-    $sql->bindParam(':keterangan', $_POST['keterangan']);
-
-    if ($sql->execute()) {
-        echo "<script>window.location='index.php?p=matakuliah'</script>";
-    } else {
-        echo "Error: " . $sql->errorInfo()[2];
-    }
-}
-
-if ($_GET['proses'] == 'delete') {
-    // Proses delete data mata kuliah
-    $sql = $db->prepare("DELETE FROM matakuliah WHERE kode_matakuliah = :kode_matakuliah");
-    $sql->bindParam(':kode_matakuliah', $_GET['kode_matakuliah']);
-
-    if ($sql->execute()) {
-        header('location:index.php?p=matakuliah');
-    } else {
-        echo "Error: " . $sql->errorInfo()[2];
-    }
+} catch (Exception $e) {
+    echo "<div class='alert alert-danger'>" . htmlspecialchars($e->getMessage()) . "</div>";
+    error_log($e->getMessage());
 }

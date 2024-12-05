@@ -1,5 +1,5 @@
 <h2>Data Dosen</h2>
-<table id="example">
+<table id="example" class="display">
     <thead>
         <tr>
             <th>No</th>
@@ -13,23 +13,33 @@
     </thead>
     <tbody>
         <?php
-        include 'admin/koneksi.php'; // Pastikan file koneksi menggunakan PDO
-        $sql = $db->query("SELECT dosen.*, prodi.nama_prodi FROM dosen JOIN prodi ON dosen.prodi_id = prodi.id");
-        $no = 1;
+        include 'admin/koneksi.php';
 
-        while ($data_dosen = $sql->fetch(PDO::FETCH_ASSOC)) {
+        try {
+            // Query untuk mengambil data dosen dan prodi
+            $stmt = $db->prepare("SELECT dosen.*, prodi.nama_prodi 
+                                  FROM dosen 
+                                  JOIN prodi ON dosen.prodi_id = prodi.id");
+            $stmt->execute();
+            $no = 1;
+
+            // Fetch semua data hasil query
+            while ($data_dosen = $stmt->fetch(PDO::FETCH_ASSOC)) {
         ?>
-            <tr>
-                <td><?= $no ?></td>
-                <td><?= $data_dosen['nip'] ?></td>
-                <td><?= $data_dosen['nama_dosen'] ?></td>
-                <td><?= $data_dosen['email'] ?></td>
-                <td><?= $data_dosen['notelp'] ?></td>
-                <td><?= $data_dosen['alamat'] ?></td>
-                <td><?= $data_dosen['nama_prodi'] ?></td>
-            </tr>
+                <tr>
+                    <td><?= $no ?></td>
+                    <td><?= htmlspecialchars($data_dosen['nip']) ?></td>
+                    <td><?= htmlspecialchars($data_dosen['nama_dosen']) ?></td>
+                    <td><?= htmlspecialchars($data_dosen['email']) ?></td>
+                    <td><?= htmlspecialchars($data_dosen['notelp']) ?></td>
+                    <td><?= htmlspecialchars($data_dosen['alamat']) ?></td>
+                    <td><?= htmlspecialchars($data_dosen['nama_prodi']) ?></td>
+                </tr>
         <?php
-            $no++;
+                $no++;
+            }
+        } catch (PDOException $e) {
+            echo "Error: " . htmlspecialchars($e->getMessage());
         }
         ?>
     </tbody>

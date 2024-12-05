@@ -1,35 +1,28 @@
 <h2>Data Prodi</h2>
-<table id="example" class="table table-striped table-bordered">
+<table id="example">
     <thead>
         <tr>
             <th>No</th>
+            <th>Id Prodi</th>
             <th>Nama Prodi</th>
-            <th>Jenjang Studi</th>
+            <th>Jenjang Prodi</th>
         </tr>
     </thead>
     <tbody>
         <?php
         include 'admin/koneksi.php';
-
-        try {
-           
-            $stmt = $dbh->prepare("SELECT * FROM prodi");
-            $stmt->execute();
-            $prodi = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $no = 1;
-
-            foreach ($prodi as $data) {
+        $prodi = $db->query("SELECT * FROM prodi");
+        $no = 1;
+        while ($data_prodi = $prodi->fetch(PDO::FETCH_ASSOC)) {
         ?>
-        <tr>
-            <td><?= $no ?></td>
-            <td><?= htmlspecialchars($data['nama_prodi']) ?></td>
-            <td><?= htmlspecialchars($data['jenjang_studi']) ?></td>
-        </tr>
+            <tr>
+                <td><?= $no ?></td>
+                <td><?= $data_prodi['id'] ?></td>
+                <td><?= $data_prodi['nama_prodi'] ?></td>
+                <td><?= $data_prodi['jenjang_studi'] ?></td>
+            </tr>
         <?php
-                $no++;
-            }
-        } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
+            $no++;
         }
         ?>
     </tbody>

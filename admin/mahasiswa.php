@@ -3,14 +3,17 @@
 </div>
 
 <?php
-include 'koneksi.php'; // Pastikan koneksi menggunakan PDO
+include 'koneksi.php';
 $aksi = isset($_GET['aksi']) ? $_GET['aksi'] : 'list';
+
 switch ($aksi) {
     case 'list':
 ?>
         <div class="row">
             <div class="col-2 mb-3">
-                <a href="index.php?p=mhs&aksi=input" class="btn btn-primary"><i class="bi bi-person-plus"></i>Tambah Mahasiswa</a>
+                <a href="index.php?p=mhs&aksi=input" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i>Tambah Mahasiswa
+                </a>
             </div>
 
             <div class="table-responsive small">
@@ -29,25 +32,35 @@ switch ($aksi) {
                     </thead>
                     <tbody>
                         <?php
-                        $stmt = $db->prepare("SELECT mahasiswa.*, prodi.nama_prodi FROM mahasiswa JOIN prodi ON mahasiswa.prodi_id = prodi.id");
-                        $stmt->execute();
-                        $no = 1;
-                        while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                        try {
+                            $stmt = $db->prepare("SELECT mahasiswa.*, prodi.nama_prodi 
+                                                FROM mahasiswa 
+                                                JOIN prodi ON mahasiswa.prodi_id = prodi.id");
+                            $stmt->execute();
+                            $no = 1;
+
+                            while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         ?>
-                            <tr>
-                                <td><?= $no++ ?></td>
-                                <td><?= htmlspecialchars($data['nama_mhs']) ?></td>
-                                <td><?= htmlspecialchars($data['tgl_lahir']) ?></td>
-                                <td><?= htmlspecialchars($data['email']) ?></td>
-                                <td><?= htmlspecialchars($data['notelp']) ?></td>
-                                <td><?= htmlspecialchars($data['alamat']) ?></td>
-                                <td><?= htmlspecialchars($data['nama_prodi']) ?></td>
-                                <td>
-                                    <a href="index.php?p=mhs&aksi=edit&nim=<?= htmlspecialchars($data['nim']) ?>" class="btn btn-success">Edit</a>
-                                    <a href="proses_mahasiswa.php?proses=delete&nim=<?= htmlspecialchars($data['nim']) ?>" class="btn btn-danger" onclick="return confirm('Yakin mau dihapus?')">Delete</a>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td><?= $no++ ?></td>
+                                    <td><?= htmlspecialchars($data['nama_mhs']) ?></td>
+                                    <td><?= htmlspecialchars($data['tgl_lahir']) ?></td>
+                                    <td><?= htmlspecialchars($data['email']) ?></td>
+                                    <td><?= htmlspecialchars($data['notelp']) ?></td>
+                                    <td><?= htmlspecialchars($data['alamat']) ?></td>
+                                    <td><?= htmlspecialchars($data['nama_prodi']) ?></td>
+                                    <td>
+                                        <a href="index.php?p=mhs&aksi=edit&nim=<?= htmlspecialchars($data['nim']) ?>"
+                                            class="btn btn-success btn-sm">Edit</a>
+                                        <a href="proses_mahasiswa.php?proses=delete&nim=<?= htmlspecialchars($data['nim']) ?>"
+                                            class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Yakin mau dihapus?')">Delete</a>
+                                    </td>
+                                </tr>
                         <?php
+                            }
+                        } catch (PDOException $e) {
+                            echo "Error: " . $e->getMessage();
                         }
                         ?>
                     </tbody>
@@ -151,10 +164,14 @@ switch ($aksi) {
                         <select name="prodi_id" class="form-select" required>
                             <option value="">Pilih Prodi</option>
                             <?php
-                            $stmt = $db->prepare("SELECT * FROM prodi");
-                            $stmt->execute();
-                            while ($data_prodi = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                                echo "<option value='{$data_prodi['id']}'>{$data_prodi['nama_prodi']}</option>";
+                            try {
+                                $stmt = $db->prepare("SELECT * FROM prodi");
+                                $stmt->execute();
+                                while ($data_prodi = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                                    echo "<option value='{$data_prodi['id']}'>{$data_prodi['nama_prodi']}</option>";
+                                }
+                            } catch (PDOException $e) {
+                                echo "Error: " . $e->getMessage();
                             }
                             ?>
                         </select>
@@ -171,7 +188,19 @@ switch ($aksi) {
         break;
 
     case 'edit':
-        // Kode edit mahasiswa
+        try {
+            $nim = $_GET['nim'];
+            $stmt = $db->prepare("SELECT * FROM mahasiswa WHERE nim = :nim");
+            $stmt->execute([':nim' => $nim]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($data) {
+                // Form edit mahasiswa
+                // Tambahkan kode form edit sesuai kebutuhan
+            }
+        } catch (PDOException $e) {
+            echo "Error: " . $e->getMessage();
+        }
         break;
 }
 ?>
